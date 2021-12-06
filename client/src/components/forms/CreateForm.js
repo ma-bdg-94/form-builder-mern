@@ -106,7 +106,7 @@ const CreateForm = ({
       )}
 
       <div>
-        {form.questions &&
+        {form && form.questions &&
           form.questions.map(q => {
             switch (q.questionType) {
               case 'text':
@@ -263,7 +263,7 @@ const CreateForm = ({
           })}
       </div>
 
-      {form && form.questions.length > 0 && (
+      {form && form.questions !== [] ? (
         <div>
           <Button onClick={() => setShowPageList(!showPageList)}>
             Assign this form to a page
@@ -273,14 +273,14 @@ const CreateForm = ({
             <div>
               {pages &&
                 pages.map(page => (
-                  <Button onClick={() => assignPage(form.id, page._id)}>
+                  <Button onClick={() => assignPage(form._id, page._id)}>
                     {page.title}
                   </Button>
                 ))}
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
