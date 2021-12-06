@@ -91,10 +91,44 @@ Router.post('/page/:form_id/:page_id', authenticated, async (req, res) => {
 })
 
 // ---get all forms---
-// Auth required: NO --- Method: GET
-Router.get('/', async (req, res) => {
+// Auth required: YES --- Method: GET
+Router.get('/', authenticated, async (req, res) => {
   try {
     const forms = await Form.find().populate('admin', 'fullName')
+    res.json(forms)
+  } catch (er) {
+    console.error(er.message)
+    res.status(500).send('Server Error! Something went wrong!')
+  }
+})
+
+// ---get form by id---
+// Auth required: YES --- Method: GET
+Router.get('/:id', authenticated, async (req, res) => {
+  try {
+    const form = await Form.findOne({_id: req.params.id}).populate('admin', 'fullName')
+    res.json(form)
+  } catch (er) {
+    console.error(er.message)
+    res.status(500).send('Server Error! Something went wrong!')
+  }
+})
+
+// ---get all forms of current admin sorted by date creation: display the most recent first---
+// Auth required: YES --- Method: GET
+Router.get('/admin/me', authenticated, async (req, res) => {
+  try {
+    const forms = await Form.find({ admin: req.user.id })
+      .sort({ createdAt: -1 })
+      .populate('admin', ['fullName', 'job'])
+
+    // ---check if there are pages---
+    if (forms.length === 0) {
+      return res.status(404).json({
+        msg: 'You have no forms yet! Please create now'
+      })
+    }
+
     res.json(forms)
   } catch (er) {
     console.error(er.message)
@@ -194,10 +228,11 @@ Router.post(
         'text',
         'paragraph',
         'checkbox',
+        'date-time',
+        'number',
         'radio',
         'phone',
         'url',
-        'file'
       ])
     ]
   ],
@@ -228,10 +263,10 @@ Router.post(
       }
 
       const newQuest = { questionDesc, questionType, isRequired }
-      form.questions.unshift(newQuest)
+      form.questions.push(newQuest)
 
       await form.save()
-      res.json(form)
+      res.json(form.questions)
     } catch (er) {
       console.error(er.message)
 
